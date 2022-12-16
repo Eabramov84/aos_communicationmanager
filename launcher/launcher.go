@@ -471,7 +471,9 @@ func (launcher *Launcher) resetDeviceAllocation() {
 }
 
 func (launcher *Launcher) sendCurrentStatus() {
-	runStatusToSend := unitstatushandler.RunInstancesStatus{UnitSubjects: []string{}}
+	runStatusToSend := unitstatushandler.RunInstancesStatus{
+		UnitSubjects: []string{}, Instances: []cloudprotocol.InstanceStatus{},
+	}
 
 	for _, node := range launcher.nodes {
 		if node.waitStatus {

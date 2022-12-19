@@ -19,6 +19,7 @@ package launcher
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"reflect"
@@ -117,6 +118,8 @@ type Storage interface {
 	AddInstance(instance aostypes.InstanceIdent, uid int) error
 	GetInstanceUID(instance aostypes.InstanceIdent) (int, error)
 	GetAllUIDs() ([]int, error)
+	SetDesiredInstances(instances json.RawMessage) error
+	GetDesiredInstances() (instances json.RawMessage, err error)
 }
 
 // ImageProvider provides image information.
@@ -169,6 +172,14 @@ func New(
 
 	launcher.fillUIDPool()
 
+	if rawDesiredInstances, err := launcher.storage.GetDesiredInstances(); err != nil {
+		log.Errorf("Can't get desired instances")
+	} else {
+		if err = json.Unmarshal(rawDesiredInstances, &launcher.currentDesiredInstances); err != nil {
+			log.Debug("Can't parse desire instances")
+		}
+	}
+
 	ctx, cancelFunction := context.WithCancel(context.Background())
 
 	launcher.cancelFunc = cancelFunction
@@ -197,6 +208,14 @@ func (launcher *Launcher) RunInstances(instances []cloudprotocol.InstanceInfo, n
 	launcher.connectionTimer.Reset(launcher.config.SMController.NodesConnectionTimeout.Duration)
 
 	launcher.resetDeviceAllocation()
+
+	if rawDesiredInstances, err := json.Marshal(instances); err != nil {
+		log.Errorf("Can't marshall desired instances: %v", err)
+	} else {
+		if err := launcher.storage.SetDesiredInstances(rawDesiredInstances); err != nil {
+			log.Errorf("Can't store desired instances: %v", err)
+		}
+	}
 
 	launcher.currentDesiredInstances = instances
 	launcher.pendingNewServices = newServices

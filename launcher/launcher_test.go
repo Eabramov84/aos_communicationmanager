@@ -18,6 +18,7 @@
 package launcher_test
 
 import (
+	"encoding/json"
 	"errors"
 	"os"
 	"reflect"
@@ -75,7 +76,8 @@ type instanceUID struct {
 	uid int
 }
 type testStorage struct {
-	uids []instanceUID
+	uids             []instanceUID
+	desiredInstances json.RawMessage
 }
 
 type testStateStorage struct {
@@ -1116,6 +1118,15 @@ func (storage *testStorage) GetInstanceUID(instance aostypes.InstanceIdent) (int
 
 func (storage *testStorage) GetAllUIDs() ([]int, error) {
 	return []int{}, nil
+}
+
+func (storage *testStorage) SetDesiredInstances(instances json.RawMessage) error {
+	storage.desiredInstances = instances
+	return nil
+}
+
+func (storage *testStorage) GetDesiredInstances() (instances json.RawMessage, err error) {
+	return storage.desiredInstances, nil
 }
 
 func (provider *testStateStorage) Setup(

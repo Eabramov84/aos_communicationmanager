@@ -191,11 +191,8 @@ func (client *Client) InstallCertificates(
 
 		response, err := client.certificateService.ApplyCert(ctx, request)
 		if err == nil {
-			certConfirmation.Serial, err = certProvider.GetCertSerial(response.CertUrl)
-		}
-
-		if err == nil {
 			certConfirmation.Status = "installed"
+			certConfirmation.Serial = response.Serial
 		} else if err != nil {
 			certConfirmation.Status = "not installed"
 			certConfirmation.Description = err.Error()
